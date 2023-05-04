@@ -5,6 +5,9 @@ namespace App\Http\Controllers\api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use Illuminate\Http\Request;
+use App\Http\Requests\v1\CurrencyStoreRequest;
+use App\Http\Resources\v1\CurrencyResource;
+use App\Http\Resources\v1\CurrencyCollection;
 
 class CurrencyController extends Controller
 {
@@ -13,9 +16,10 @@ class CurrencyController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Currency::all();
+        $currencies = $this->currencyFilter($request);
+        return new CurrencyCollection($currencies);
     }
 
     /**
@@ -24,43 +28,28 @@ class CurrencyController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(CurrencyStoreRequest $request)
     {
-        Currency::create($request->all());
-        return response()->json(['status' => 'success', 'msg' => "Pomyślnie dodano dane na temat waluty."], 200);
+        $check = Currency::where(['name' => strtoupper($request->name), 'date' => $request->date])->first();
+        if(isset($check)) {
+            return response()->json(['status' => false, 'message' => sprintf("Dane na temat waluty: %s zostały już dziś dodane (%s)", strtoupper($request->name), $request->date)], 409);
+        }
+
+        Currency::create(['name' => strtoupper($request->name), 'date' => $request->date, 'amount' => $request->amount]);
+        return response()->json(['status' => true, 'message' => "Pomyślnie dodano dane walutowe."], 200);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Currency  $currency
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Currency $currency)
+    public function currencyFilter(Request $request)
     {
-        //
-    }
+        $currencies = Currency::all();
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Currency  $currency
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Currency $currency)
-    {
-        //
-    }
+        if($request->has('date')) {
+            $currencies = $currencies->where('date', $request->date);
+        }
+        if($request->has('currency')) {
+            $currencies = $currencies->where('name', $request->currency);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Currency  $currency
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Currency $currency)
-    {
-        //
+        return $currencies;
     }
 }
