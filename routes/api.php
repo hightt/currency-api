@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\api\v1\CurrencyController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -18,6 +18,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers\api\v1', 'as' => 'api.', 'middleware' => ['auth:sanctum']], function(){
-    Route::ApiResource('currencies', CurrencyController::class)->only(['index', 'store']);
+Route::group(['prefix' => 'v1/currencies', 'namespace' => 'App\Http\Controllers\api\v1', 'as' => 'api.'], function(){
+    Route::get('/', [CurrencyController::class, 'index']);
+    Route::post('/', [CurrencyController::class, 'store'])->middleware(['api.verifyAccess']);
 });
