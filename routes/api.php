@@ -18,6 +18,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers\api\v1', 'as' => 'api.'], function(){
+Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers\api\v1', 'as' => 'api.', 'middleware' => ['auth:sanctum']], function(){
     Route::ApiResource('currencies', CurrencyController::class)->only(['index', 'store']);
 });
